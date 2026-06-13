@@ -657,3 +657,555 @@
       <div class="sidebar-head">Новости Steam</div>
       <div class="news-list">
         <div class=
+         cat > /mnt/user-data/outputs/steam.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steam</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #1b2838;
+    --panel:     #2a475e;
+    --panel2:    #16202d;
+    --surface:   #c6d4df;
+    --accent:    #66c0f4;
+    --accent2:   #4d9ec7;
+    --green:     #5ba32b;
+    --green-hov: #6abf33;
+    --text:      #c6d4df;
+    --muted:     #8f98a0;
+    --highlight: #1a9fff;
+    --nav-h:     66px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Motiva Sans", Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* ───────────── TOP BAR ───────────── */
+  .topbar {
+    background: #171d25;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    gap: 14px;
+    font-size: 11px;
+    color: var(--muted);
+    border-bottom: 1px solid #000;
+  }
+  .topbar a:hover { color: var(--accent); }
+  .topbar .sep { color: #444; }
+
+  /* ───────────── HEADER ───────────── */
+  header {
+    background: linear-gradient(to bottom, #1b2838 0%, #1f3145 100%);
+    padding: 0 20px;
+  }
+  .header-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--nav-h);
+    gap: 24px;
+  }
+  .logo {
+    width: 176px;
+    flex-shrink: 0;
+  }
+  .logo svg { display: block; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .btn-install {
+    background: linear-gradient(to bottom, #4d7a36, #3a5c28);
+    color: #d2f5a6;
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    border: none;
+    cursor: pointer;
+    transition: filter .15s;
+  }
+  .btn-install:hover { filter: brightness(1.15); }
+
+  .avatar-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: background .15s;
+  }
+  .avatar-area:hover { background: rgba(255,255,255,.07); }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #2a4c6f, #1b3a58);
+    border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .username { font-size: 12px; color: var(--accent); }
+  .pts { font-size: 10px; color: var(--muted); }
+
+  /* ───────────── NAV ───────────── */
+  nav {
+    background: linear-gradient(to bottom, #2a475e 0%, #1e3a52 100%);
+    border-bottom: 1px solid #000;
+  }
+  .nav-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    align-items: stretch;
+    height: 36px;
+  }
+  .nav-inner a {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 13px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 700;
+    transition: background .12s, color .12s;
+    border-right: 1px solid rgba(0,0,0,.15);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .nav-inner a:hover { background: rgba(255,255,255,.1); color: #fff; }
+  .nav-inner a.active { background: rgba(255,255,255,.12); color: #fff; }
+
+  /* ───────────── MAIN ───────────── */
+  .main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    display: grid;
+    grid-template-columns: 1fr 310px;
+    gap: 16px;
+  }
+
+  /* ───────────── HERO SLIDER ───────────── */
+  .hero-wrap { grid-column: 1; }
+  .section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .slider {
+    position: relative;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 16/7;
+    cursor: pointer;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .5s;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .slide.active { opacity: 1; }
+  .slide-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+  .slide-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 60%);
+  }
+  .slide-info {
+    position: relative;
+    z-index: 2;
+    padding: 18px 20px;
+  }
+  .slide-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,.8);
+    margin-bottom: 4px;
+  }
+  .slide-tags {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: rgba(102,192,244,.18);
+    border: 1px solid rgba(102,192,244,.35);
+    color: var(--accent);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: .3px;
+  }
+  .slide-desc {
+    font-size: 12px;
+    color: #b0c0cc;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  .slider-dots {
+    display: flex;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #16202d;
+  }
+  .dot {
+    width: 60px; height: 40px;
+    border-radius: 2px;
+    cursor: pointer;
+    overflow: hidden;
+    border: 2px solid transparent;
+    transition: border-color .15s;
+    flex-shrink: 0;
+  }
+  .dot.active { border-color: var(--accent); }
+  .dot-img {
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* ───────────── GAME CARDS ───────────── */
+  .games-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .game-card {
+    background: var(--panel2);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    border: 1px solid rgba(255,255,255,.05);
+  }
+  .game-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.5);
+  }
+  .game-card.hidden { display: none; }
+  .card-img {
+    width: 100%;
+    aspect-ratio: 16/7;
+    background-size: cover;
+    background-position: center;
+  }
+  .card-body { padding: 8px 10px; }
+  .card-title { font-size: 12px; font-weight: 700; color: #c6d4df; margin-bottom: 4px; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; }
+  .card-tags { display: flex; gap: 4px; }
+  .card-tag { font-size: 9px; background: rgba(255,255,255,.07); color: var(--muted); padding: 1px 5px; border-radius: 2px; }
+  .card-price { font-size: 12px; font-weight: 700; color: var(--green-hov); }
+  .card-price.free { color: var(--accent); }
+  .discount-wrap { display: flex; gap: 4px; align-items: center; }
+  .discount-badge { background: #4c6b22; color: #a4d007; font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 2px; }
+  .price-orig { color: var(--muted); font-size: 10px; text-decoration: line-through; }
+  .no-results { grid-column: 1/-1; text-align: center; padding: 30px; color: var(--muted); }
+
+  /* ───────────── SIDEBAR ───────────── */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+  .sidebar-box {
+    background: var(--panel2);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.05);
+  }
+  .sidebar-head {
+    background: linear-gradient(to right, #1e3a52, #243e55);
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--surface);
+    border-bottom: 1px solid rgba(0,0,0,.3);
+  }
+
+  .login-box { padding: 14px; }
+  .login-box p { color: var(--muted); font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+  .btn-login {
+    width: 100%;
+    padding: 8px;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    transition: filter .15s;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .btn-steam { background: linear-gradient(to bottom, #688bc6, #4f70a8); color: #fff; }
+  .btn-steam:hover { filter: brightness(1.12); }
+  .btn-create { background: linear-gradient(to bottom, #5ba32b, #4a8224); color: #d2f5a6; }
+  .btn-create:hover { filter: brightness(1.12); }
+
+  .seller-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .seller-item:hover { background: rgba(255,255,255,.05); }
+  .seller-num { color: var(--muted); font-size: 11px; width: 14px; text-align: right; flex-shrink: 0; }
+  .seller-thumb { width: 46px; height: 22px; border-radius: 2px; background-size: cover; background-position: center; flex-shrink: 0; }
+  .seller-info { flex: 1; min-width: 0; }
+  .seller-name { font-size: 12px; color: #c6d4df; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seller-price { font-size: 11px; color: var(--green-hov); }
+
+  .news-item { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,.04); cursor: pointer; transition: background .12s; }
+  .news-item:hover { background: rgba(255,255,255,.05); }
+  .news-title { font-size: 12px; color: var(--accent); margin-bottom: 2px; line-height: 1.4; }
+  .news-meta { font-size: 10px; color: var(--muted); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(0,0,0,.3); }
+  .stat-cell { background: var(--panel2); padding: 10px; text-align: center; }
+  .stat-num { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* ───────────── CATEGORY STRIP ───────────── */
+  .category-strip {
+    max-width: 1000px; margin: 0 auto 20px; padding: 0 16px;
+    display: flex; gap: 8px; overflow-x: auto;
+    scrollbar-width: thin; scrollbar-color: var(--panel) transparent;
+  }
+  .cat-btn {
+    flex-shrink: 0;
+    background: var(--panel2);
+    border: 2px solid rgba(255,255,255,.07);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    white-space: nowrap;
+  }
+  .cat-btn:hover { background: var(--panel); color: #fff; }
+  .cat-btn.active { background: var(--panel); border-color: var(--accent); color: #fff; }
+
+  /* ───────────── FOOTER ───────────── */
+  footer {
+    background: #171d25; border-top: 1px solid #000;
+    padding: 20px 16px; text-align: center;
+    color: var(--muted); font-size: 11px; line-height: 1.8;
+  }
+  footer a { color: var(--accent); }
+  footer a:hover { color: #8fd4ff; }
+
+  /* ───────────── MODALS ───────────── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.78); z-index: 900;
+    align-items: center; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: #2a3f54; border-radius: 5px;
+    width: 400px; max-width: 94vw;
+    border: 1px solid rgba(102,192,244,.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,.8);
+    overflow: hidden;
+    animation: popIn .18s ease;
+  }
+  @keyframes popIn { from { transform: scale(.93); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-head {
+    background: linear-gradient(to right, #1e3a52, #243e55);
+    padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(0,0,0,.35);
+  }
+  .modal-head h2 { font-size: 14px; color: #fff; font-weight: 700; }
+  .modal-x { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+  .modal-x:hover { color: #fff; }
+  .modal-body { padding: 18px 16px; }
+  .modal-logo { text-align: center; font-size: 30px; font-weight: 900; color: #c6d4df; letter-spacing: -1px; margin-bottom: 16px; }
+  .field { margin-bottom: 11px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+  .field input {
+    width: 100%; background: #17222e; border: 1px solid #3d5a75;
+    border-radius: 3px; padding: 8px 10px; color: #fff; font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 7px; margin-top: 14px; }
+  .modal-btns button { flex: 1; padding: 9px; border-radius: 3px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; transition: filter .15s; }
+  .btn-primary { background: linear-gradient(to bottom, #688bc6, #4f70a8); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.12); }
+  .btn-secondary { background: rgba(255,255,255,.09); color: var(--text); }
+  .btn-secondary:hover { background: rgba(255,255,255,.15); }
+  .modal-link { text-align: center; margin-top: 11px; font-size: 11px; color: var(--muted); }
+  .modal-link a { color: var(--accent); cursor: pointer; }
+  .modal-err { background: rgba(255,70,70,.1); border: 1px solid rgba(255,70,70,.3); color: #ff8888; border-radius: 3px; padding: 7px 10px; font-size: 12px; margin-bottom: 10px; display: none; }
+  .modal-ok { background: rgba(91,163,43,.15); border: 1px solid rgba(91,163,43,.4); color: #8bd050; border-radius: 3px; padding: 12px; font-size: 13px; text-align: center; line-height: 1.6; }
+
+  /* ───────────── GAME MODAL ───────────── */
+  .game-modal { width: 680px; }
+  .game-hero {
+    width: 100%; aspect-ratio: 16/6;
+    background-size: cover; background-position: center;
+    position: relative; cursor: default;
+  }
+  .game-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(18,26,36,.92) 0%, transparent 55%); }
+  .game-hero-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 18px; z-index: 1; }
+  .game-hero-info h1 { font-size: 22px; font-weight: 900; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+  .game-hero-info .gdev { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .game-body { display: grid; grid-template-columns: 1fr 190px; gap: 14px; padding: 14px 16px; }
+  .game-desc { font-size: 12px; color: #a8bcc8; line-height: 1.65; }
+  .game-ftags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+  .game-score-row { margin-top: 11px; }
+  .score-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+  .score-val { font-size: 13px; font-weight: 700; }
+  .score-count { font-size: 11px; color: var(--muted); margin-left: 5px; }
+  .game-shots { display: flex; gap: 5px; margin-top: 11px; overflow-x: auto; }
+  .shot { width: 96px; height: 54px; border-radius: 2px; flex-shrink: 0; background-size: cover; background-position: center; border: 1px solid rgba(255,255,255,.1); cursor: pointer; transition: opacity .12s; }
+  .shot:hover { opacity: .8; }
+  .g-cover { width: 100%; aspect-ratio: 3/4; border-radius: 3px; background-size: cover; background-position: center; margin-bottom: 9px; }
+  .g-pricebox { background: #1b2838; border-radius: 3px; padding: 9px; margin-bottom: 7px; }
+  .g-price-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+  .g-price-big { font-size: 19px; font-weight: 700; color: var(--green-hov); }
+  .g-price-big.is-free { color: var(--accent); }
+  .btn-cart { width: 100%; padding: 9px; background: linear-gradient(to bottom,#588a23,#4a7220); color: #d2f5a6; border: none; border-radius: 3px; cursor: pointer; font-size: 13px; font-weight: 700; transition: filter .15s; margin-bottom: 5px; }
+  .btn-cart:hover { filter: brightness(1.14); }
+  .btn-wish { width: 100%; padding: 7px; background: rgba(255,255,255,.07); color: var(--text); border: 1px solid rgba(255,255,255,.1); border-radius: 3px; cursor: pointer; font-size: 12px; transition: background .12s; }
+  .btn-wish:hover { background: rgba(255,255,255,.12); }
+  .btn-wish.on { background: rgba(91,163,43,.14); border-color: rgba(91,163,43,.4); color: #8bd050; }
+  .g-meta { font-size: 11px; }
+  .g-meta-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  .g-meta-k { color: var(--muted); }
+  .g-meta-v { color: var(--text); text-align: right; }
+
+  /* ───────────── TOAST ───────────── */
+  .toast {
+    position: fixed; bottom: 22px; right: 22px;
+    background: #2a475e; border: 1px solid var(--accent);
+    border-radius: 4px; padding: 11px 15px;
+    font-size: 13px; color: #fff; z-index: 1000;
+    transform: translateY(50px); opacity: 0;
+    transition: transform .28s, opacity .28s; pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--panel); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ LOGIN MODAL ══ -->
+<div class="overlay" id="mLogin">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Вход в Steam</h2>
+      <button class="modal-x" onclick="closeM('mLogin')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-logo">STEAM</div>
+      <div class="modal-err" id="loginErr">Заполните все поля.</div>
+      <div class="field"><label>Имя аккаунта</label><input id="lUser" placeholder="Введите имя аккаунта"></div>
+      <div class="field"><label>Пароль</label><input id="lPass" type="password" placeholder="Введите пароль"></div>
+      <div class="modal-btns">
+        <button class="btn-primary" onclick="doLogin()">Войти</button>
+        <button class="btn-secondary" onclick="closeM('mLogin')">Отмена</button>
+      </div>
+      <div class="modal-link">Нет аккаунта? <a onclick="toReg()">Создать бесплатно</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REGISTER MODAL ══ -->
+<div class="overlay" id="mReg">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Создать аккаунт Steam</h2>
+      <button class="modal-x" onclick="closeM('mReg')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="regForm">
+        <div class="field"><label>Имя аккаунта</label><input id="rUser" placeholder="Придумайте имя"></div>
+        <div class="field"><label>Email</label><input id="rEmail" type="email" placeholder="your@email.com"></div>
+        <div class="field"><label>Пароль</label><input id="rPass" type="password" placeholder="Минимум 8 символов"></div>
+        <div class="modal-btns">
+          <button class="btn-primary" onclick="doReg()">Создать аккаунт</button>
+          <button class="btn-secondary" onclick="closeM('mReg')">Отмена</button>
+        </div>
+        <div class="modal-link">Уже есть аккаунт? <a onclick="toLogin()">Войти</a></div>
+      </div>
+      <div id="regOk" style="display:none">
+        <div class="modal-ok">✅ Аккаунт создан!<br>Добро пожаловать в Steam.<br><br>
+          <button class="btn-primary" style="padding:8px 20px;border:none;border-radius:3px;cursor:pointer;font-weight:700" onclick="closeM('mReg')">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME MODAL ══ -->
+<div class="overlay" id="mGame">
+  <div class="modal game-modal">
+    <div class="modal-head">
+      <h2 id="gTitle">—</h2>
+      <button class="modal-x" onclick="closeM('mGame')">✕</button>
+    </div>
+    <div style="padding:0">
+      <div class="game-hero" id="gHero">
+        <div class="game-hero-info">
+          <h1 id="gName"></h1>
+          <div class="gdev" id="gDev"></div>
+        </div>
+      </div>
+      <div class="game-body">
+        <div>
+          <div class="game-desc" id="gDesc"></div>
+          <div class="game-ftags" id="gTags"></div>
+          <div class="game-score-row">
+            <div class="score-label">Обзоры пользователей</div>
+            <span class="score-val" id="gScore"></span>
+            <span class="score-count" id="g
